@@ -28,6 +28,7 @@
         <a href="#home">Home</a>
         <a href="#shop">Shop</a>
         <a href="#about">About</a>
+        <a href="#adminInventory" id="inventoryNav" hidden>Inventory</a>
         <a href="#shop" id="navCart" onclick="openCart(event)" hidden>Cart <span class="cart-count" id="navCount">0</span></a>
         <span class="nav-user" id="navUser" hidden></span>
         <a href="#" class="nav-login" id="navAuth" onclick="navAuthClick(event)">Login</a>
@@ -75,6 +76,19 @@
 <!-- ============ PRODUCTS ============ -->
 <div class="filters" id="catBar" hidden></div>
 <div class="products" id="productsGrid" hidden></div>
+</section>
+
+<!-- ============ LOCAL DEMO INVENTORY MANAGEMENT ============ -->
+<section class="inventory-admin" id="adminInventory" hidden>
+    <div class="inventory-admin-inner">
+        <div class="inventory-heading">
+            <div><div class="eyebrow">Admin · Demo only</div><h2>Inventory management</h2></div>
+            <button type="button" class="btn" onclick="openInventoryEditor()">Add product</button>
+        </div>
+        <p class="inventory-notice">Demo only: changes are saved in this browser and are not shared with customers or other devices. This login is not secure for a live store.</p>
+        <div class="inventory-stats" id="inventoryStats"></div>
+        <div class="inventory-rows" id="inventoryRows"></div>
+    </div>
 </section>
 
 <!-- ============ PERKS ============ -->
@@ -185,7 +199,30 @@
             <div class="auth-error" id="authError"></div>
             <button class="btn" type="submit" id="authSubmit">Login</button>
         </form>
-        <p class="demo-hint">Demo account: <b>demo@havenhue.com</b> / <b>demo1234</b></p>
+        <p class="demo-hint">Shopper demo: <b>demo@havenhue.com</b> / <b>demo1234</b><br>Admin demo: <b>admin@havenhue.com</b> / <b>admin1234</b><br><small>Demo accounts and inventory are stored in this browser only.</small></p>
+    </div>
+</div>
+
+<!-- ============ INVENTORY PRODUCT EDITOR ============ -->
+<div class="modal" id="inventoryEditorModal" hidden onclick="if(event.target===this)closeInventoryEditor()">
+    <div class="modal-box inventory-editor">
+        <button type="button" class="close" onclick="closeInventoryEditor()" aria-label="Close">&times;</button>
+        <h2 id="inventoryEditorTitle">Add product</h2>
+        <form id="inventoryEditorForm" onsubmit="saveInventoryProduct(event)">
+            <label for="inventoryName">Product name</label>
+            <input id="inventoryName" type="text" maxlength="80" required>
+            <label for="inventoryDescription">Description</label>
+            <textarea id="inventoryDescription" rows="3" maxlength="240" required></textarea>
+            <div class="inventory-form-grid">
+                <div><label for="inventoryPrice">Price (₱)</label><input id="inventoryPrice" type="number" min="0.01" step="0.01" required></div>
+                <div><label for="inventoryCategory">Category</label><select id="inventoryCategory" required><option>Tabletop</option><option>Candles &amp; Lighting</option><option>Cozy Textiles</option><option>Wall Art</option><option>Greenery</option></select></div>
+                <div><label for="inventoryStock">Stock quantity</label><input id="inventoryStock" type="number" min="0" step="1" required></div>
+                <div><label for="inventoryThreshold">Low-stock alert at</label><input id="inventoryThreshold" type="number" min="0" step="1" required></div>
+            </div>
+            <label for="inventoryImage">Image URL (optional)</label>
+            <input id="inventoryImage" type="url" placeholder="https://example.com/product.jpg">
+            <button class="btn" type="submit">Save product</button>
+        </form>
     </div>
 </div>
 

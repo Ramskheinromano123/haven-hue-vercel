@@ -23,7 +23,7 @@ const FREE_SHIP = 1500, SHIP_FEE = 99;
 function addLine(l) {
     const found = cart.find(i => i.key === l.key);
     if (found) found.quantity += l.qty;
-    else cart.push({ key: l.key, name: l.name, opt: l.opt, hex: l.hex, img: l.img || null, icon: l.icon || '', price: l.price, quantity: l.qty });
+    else cart.push({ key: l.key, productId: l.productId || null, name: l.name, opt: l.opt, hex: l.hex, img: l.img || null, icon: l.icon || '', price: l.price, quantity: l.qty });
 }
 
 function totals() {
@@ -34,8 +34,8 @@ function totals() {
 
 function thumb(i) {
     return i.img
-        ? `<div class="ci-img"><img src="${i.img}" alt="${i.name} - ${i.opt}"></div>`
-        : `<div class="ci-img" style="background:${i.hex}">${i.icon}</div>`;
+        ? `<div class="ci-img"><img src="${escapeHTML(i.img)}" alt="${escapeHTML(i.name)} - ${escapeHTML(i.opt)}"></div>`
+        : `<div class="ci-img" style="background:${escapeHTML(i.hex)}">${escapeHTML(i.icon)}</div>`;
 }
 
 function renderCart() {
@@ -43,7 +43,7 @@ function renderCart() {
     $('cartCount').textContent = t.count;
     $('navCount').textContent = t.count;
     $('cartTotal').textContent = t.sub.toLocaleString('en-PH');
-    $('cartItems').innerHTML = cart.length ? cart.map(i => `${i.name} (${i.opt}) × ${i.quantity}`).join('<br>') : 'Your cart is empty.';
+    $('cartItems').innerHTML = cart.length ? cart.map(i => `${escapeHTML(i.name)} (${escapeHTML(i.opt)}) × ${i.quantity}`).join('<br>') : 'Your cart is empty.';
     if (!$('cartDrawer').hidden) drawCart();
 }
 
@@ -52,13 +52,13 @@ function drawCart() {
     $('drawerBody').innerHTML = cart.length ? cart.map(i => `
         <div class="ci">${thumb(i)}
             <div class="ci-info">
-                <b>${i.name}</b>
-                <small><i style="background:${i.hex}"></i>${i.opt} · ${peso(i.price)}</small>
+                <b>${escapeHTML(i.name)}</b>
+                <small><i style="background:${escapeHTML(i.hex)}"></i>${escapeHTML(i.opt)} · ${peso(i.price)}</small>
                 <div class="ci-row">
-                    <div class="qty"><button onclick="changeQty('${i.key}',-1)">−</button><span>${i.quantity}</span><button onclick="changeQty('${i.key}',1)">+</button></div>
+                    <div class="qty"><button onclick="changeQty('${escapeHTML(i.key)}',-1)">−</button><span>${i.quantity}</span><button onclick="changeQty('${escapeHTML(i.key)}',1)">+</button></div>
                     <b>${peso(i.price * i.quantity)}</b>
                 </div>
-                <button class="ci-rm" onclick="removeItem('${i.key}')">Remove</button>
+                <button class="ci-rm" onclick="removeItem('${escapeHTML(i.key)}')">Remove</button>
             </div>
         </div>`).join('') : '<div class="empty">🛍️<br>Your cart is empty.<br>Pick a product and choose your color!</div>';
     $('drawerFoot').innerHTML = cart.length ? `
@@ -73,6 +73,11 @@ function openCart(e) { if (e) e.preventDefault(); $('cartBg').hidden = false; $(
 function closeCart() { $('cartBg').hidden = true; $('cartDrawer').hidden = true; }
 function changeQty(key, d) {
     const i = cart.find(x => x.key === key); if (!i) return;
+    const product = PRODUCTS.find(p => p.id === i.productId);
+    if (d > 0 && product) {
+        const reserved = cart.filter(x => x.productId === product.id).reduce((sum, item) => sum + item.quantity, 0);
+        if (reserved >= product.stock) { showToast('No more stock is available for this item.'); return; }
+    }
     i.quantity = Math.max(1, Math.min(99, i.quantity + d)); renderCart(); drawCart();
 }
 function removeItem(key) { cart = cart.filter(x => x.key !== key); renderCart(); drawCart(); }
@@ -106,7 +111,7 @@ function drawCheckout() {
         </div>
         <div class="ck-sum">
             <h4 style="margin-top:0">Order summary</h4>
-            ${cart.map(i => `<div class="ci">${thumb(i)}<div class="ci-info"><b>${i.name}</b><small><i style="background:${i.hex}"></i>${i.opt} × ${i.quantity}</small></div><b style="font-size:13px">${peso(i.price * i.quantity)}</b></div>`).join('')}
+            ${cart.map(i => `<div class="ci">${thumb(i)}<div class="ci-info"><b>${escapeHTML(i.name)}</b><small><i style="background:${escapeHTML(i.hex)}"></i>${escapeHTML(i.opt)} × ${i.quantity}</small></div><b style="font-size:13px">${peso(i.price * i.quantity)}</b></div>`).join('')}
             <div class="sum-row" style="margin-top:12px"><span>Subtotal</span><span>${peso(t.sub)}</span></div>
             <div class="sum-row"><span>Shipping</span><span>${t.ship ? peso(t.ship) : '<span class="free">FREE</span>'}</span></div>
             <div class="sum-row total"><span>Total</span><span>${peso(t.total)}</span></div>
@@ -144,6 +149,28 @@ function drawPayDetail() {
 
 function placeOrder(e) {
     e.preventDefault();
+    const requiredStock = new Map();
+    cart.forEach(item => {
+        if (item.productId) requiredStock.set(item.productId, (requiredStock.get(item.productId) || 0) + item.quantity);
+    });
+    for (const [productId, quantity] of requiredStock) {
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (!product || product.stock < quantity) {
+            showToast('Stock changed for an item in your cart. Please review your cart before ordering.');
+            closeCheckout();
+            openCart();
+            return;
+        }
+    }
+    requiredStock.forEach((quantity, productId) => {
+        const product = PRODUCTS.find(p => p.id === productId);
+        product.stock -= quantity;
+    });
+    if (requiredStock.size) {
+        saveInventory();
+        renderProducts();
+        if (isAdmin()) renderInventory();
+    }
     const t = totals();
     const label = payMethod === 'ewallet' ? 'E-Wallet (' + $('walletType').value + ')'
                 : payMethod === 'bank' ? 'Bank Transfer (' + $('bankType').value + ')' : 'Cash on Delivery';
@@ -158,12 +185,12 @@ function placeOrder(e) {
     const orders = getData('hh_orders') || []; orders.push(order); setData('hh_orders', orders);
     cart = []; renderCart();
     const cod = payMethod === 'cod';
-    $('ckBody').innerHTML = `<div class="done">
-        <div class="ok">✓</div><h2>Thank you, ${order.customer.name.split(' ')[0]}!</h2>
+    $('ckBody').innerHTML = `    <div class="done">
+    <div class="ok">✓</div><h2>Thank you, ${escapeHTML(order.customer.name.split(' ')[0])}!</h2>
         <p style="color:#81756c">Your order has been placed.</p>
         <div class="ordno">Order no.: <b>${order.no}</b><br>Payment: <b>${label}</b><br>
         Status: <b>${cod ? 'To be paid on delivery' : 'Awaiting payment verification'}</b><br>
-        ${order.ref ? 'Reference: <b>' + order.ref + '</b><br>' : ''}Deliver to: ${order.customer.address}<br>
+        ${order.ref ? 'Reference: <b>' + escapeHTML(order.ref) + '</b><br>' : ''}Deliver to: ${escapeHTML(order.customer.address)}<br>
         Total: <b>${peso(order.total)}</b></div>
         <button class="btn" onclick="closeCheckout()">Continue Shopping</button></div>`;
 }
@@ -219,13 +246,13 @@ function submitAuth(e) {
         const name = $('fName').value.trim();
         if (pass.length < 6) { $('authError').textContent = 'Password must be at least 6 characters.'; return; }
         if (users.some(u => u.email === email)) { $('authError').textContent = 'An account with this email already exists.'; return; }
-        users.push({ name: name, email: email, pass: pass });
+        users.push({ name: name, email: email, pass: pass, role: 'customer' });
         setData('hh_users', users);
-        setData('hh_session', { name: name, email: email });
+        setData('hh_session', { name: name, email: email, role: 'customer' });
     } else {
         const user = users.find(u => u.email === email && u.pass === pass);
         if (!user) { $('authError').textContent = 'Incorrect email or password.'; return; }
-        setData('hh_session', { name: user.name, email: user.email });
+        setData('hh_session', { name: user.name, email: user.email, role: user.role || 'customer' });
     }
 
     $('authForm').reset();
@@ -253,18 +280,23 @@ function navAuthClick(e) {
 function updateAuthUI() {
     const user = getData('hh_session');
     const on = !!user;
+    const admin = on && user.role === 'admin';
     $('productsGrid').hidden = !on;
     $('catBar').hidden = !on;
     $('cartPanel').hidden = !on;
     $('navCart').hidden = !on;
+    $('inventoryNav').hidden = !admin;
+    $('adminInventory').hidden = !admin;
     $('heroLogin').hidden = on;
     $('navUser').hidden = !on;
     $('navAuth').textContent = on ? 'Logout' : 'Login';
     if (on) {
         $('navUser').textContent = 'Hi, ' + user.name.split(' ')[0];
         $('shopSub').textContent = 'Welcome back, ' + user.name.split(' ')[0] + '! Here are our best sellers.';
+        if (admin) renderInventory();
     } else {
         $('shopSub').textContent = 'Beautiful finds to make your space uniquely yours.';
+        closeInventoryEditor();
     }
 }
 
@@ -276,18 +308,25 @@ function showToast(msg) {
     showToast.timer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// Demo login: demo@havenhue.com / demo1234  (remove this when you have a real backend)
+// Demo credentials only; these browser-stored accounts are not secure authentication.
 function ensureDemoAccount() {
     const users = getData('hh_users') || [];
-    if (!users.some(u => u.email === 'demo@havenhue.com')) {
-        users.push({ name: 'Demo Shopper', email: 'demo@havenhue.com', pass: 'demo1234' });
-        setData('hh_users', users);
-    }
+    const demos = [
+        { name: 'Demo Shopper', email: 'demo@havenhue.com', pass: 'demo1234', role: 'customer' },
+        { name: 'Demo Admin', email: 'admin@havenhue.com', pass: 'admin1234', role: 'admin' }
+    ];
+    let changed = false;
+    demos.forEach(demo => {
+        const existing = users.find(user => user.email === demo.email);
+        if (!existing) { users.push(demo); changed = true; }
+        else if (existing.role !== demo.role) { existing.role = demo.role; changed = true; }
+    });
+    if (changed) setData('hh_users', users);
 }
 
 /* ---------- PRODUCTS ---------- */
 // EDIT HERE: product names, prices, photos, colors and add-ons
-const PRODUCTS = [
+const DEFAULT_PRODUCTS = [
  { name:'Minimalist Ceramic Vase', price:450, img:'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?auto=format&fit=crop&w=700&q=80', desc:'A simple, elegant accent for shelves and tables.',
    colors:[['White','#f3efe8']],
    extras:[{n:'Dried Pampas Stems',i:'🌾',p:180,c:[['Natural','#d9c3a0'],['White','#f1ece4']]},{n:'Small Bud Vase',i:'🏺',p:220,c:[['White','#f3efe8'],['Sand','#d8c4a8'],['Terracotta','#b8694a']]}] },
@@ -318,22 +357,168 @@ const PRODUCTS = [
    To use your own photo for a color, add a 3rd value to that color:
    colors:[['White','#f3efe8','white-vase.jpg'], ['Sand','#d8c4a8','sand-vase.jpg']]
    Colors without a photo get a generated product picture in that color (backdrop never changes). */
-/* ---------- CATEGORIES (each product has exactly ONE) ----------
-   EDIT HERE: change a product's category in the list below (same order as PRODUCTS). */
+/* ---------- CATEGORIES (each product has exactly ONE) ---------- */
 const CATS = ['Tabletop', 'Candles & Lighting', 'Cozy Textiles', 'Wall Art', 'Greenery'];
-['Tabletop', 'Candles & Lighting', 'Tabletop', 'Cozy Textiles', 'Candles & Lighting', 'Wall Art', 'Tabletop', 'Greenery']
-    .forEach((c, i) => PRODUCTS[i].cat = c);
+const DEFAULT_CATEGORIES = ['Tabletop', 'Candles & Lighting', 'Tabletop', 'Cozy Textiles', 'Candles & Lighting', 'Wall Art', 'Tabletop', 'Greenery'];
+const KINDS = ['vase', 'candle', 'tray', 'cushion', 'lamp', 'frame', 'bowl', 'plant'];
+function escapeHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+}
+function safeImageURL(value) {
+    try {
+        const url = new URL(String(value || '').trim(), location.href);
+        return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
+    } catch (e) { return ''; }
+}
+function productSlug(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+function loadInventory() {
+    const saved = getData('hh_inventory');
+    const source = Array.isArray(saved) ? saved : DEFAULT_PRODUCTS;
+    return source.filter(product => product && typeof product.name === 'string' && typeof product.desc === 'string' && Number.isFinite(product.price))
+        .map((product, index) => {
+            const defaultIndex = DEFAULT_PRODUCTS.findIndex(item => item.name === product.name);
+            const defaults = defaultIndex >= 0 ? DEFAULT_PRODUCTS[defaultIndex] : null;
+            const img = safeImageURL(product.img) || (defaults && safeImageURL(defaults.img)) || '';
+            return {
+                ...defaults,
+                ...product,
+                id: typeof product.id === 'string' && /^[a-zA-Z0-9_-]+$/.test(product.id) ? product.id : (productSlug(product.name) || `product-${index + 1}`),
+                img,
+                cat: typeof product.cat === 'string' && product.cat ? product.cat : DEFAULT_CATEGORIES[defaultIndex >= 0 ? defaultIndex : index % DEFAULT_CATEGORIES.length],
+                kind: typeof product.kind === 'string' && product.kind ? product.kind : KINDS[defaultIndex >= 0 ? defaultIndex : 0],
+                stock: Number.isInteger(product.stock) && product.stock >= 0 ? product.stock : (defaultIndex >= 0 ? 10 + defaultIndex * 2 : 12),
+                lowStockThreshold: Number.isInteger(product.lowStockThreshold) && product.lowStockThreshold >= 0 ? product.lowStockThreshold : 5,
+                colors: Array.isArray(product.colors) && product.colors.length ? product.colors : (defaults ? defaults.colors : [['Standard', '#b7a18a']]),
+                extras: Array.isArray(product.extras) ? product.extras : (defaults ? defaults.extras : [])
+            };
+        });
+}
+let PRODUCTS = loadInventory();
+function isAdmin() {
+    const user = getData('hh_session');
+    return !!user && user.role === 'admin';
+}
+function saveInventory() { setData('hh_inventory', PRODUCTS); }
 let activeCat = 'All';
 function drawFilters() {
     $('catBar').innerHTML = ['All'].concat(CATS).map(c => {
         const n = c === 'All' ? PRODUCTS.length : PRODUCTS.filter(p => p.cat === c).length;
-        return `<button type="button" class="fbtn ${c === activeCat ? 'on' : ''}" data-cat="${c}" onclick="setCat(this.dataset.cat)">${c}<small>${n}</small></button>`;
+        return `<button type="button" class="fbtn ${c === activeCat ? 'on' : ''}" data-cat="${escapeHTML(c)}" onclick="setCat(this.dataset.cat)">${escapeHTML(c)}<small>${n}</small></button>`;
     }).join('');
 }
 function setCat(c) { activeCat = c; drawFilters(); renderProducts(); }
-
-const KINDS = ['vase', 'candle', 'tray', 'cushion', 'lamp', 'frame', 'bowl', 'plant'];
-PRODUCTS.forEach((p, i) => p.kind = KINDS[i]);
+function stockLabel(product) {
+    if (product.stock === 0) return 'Out of stock';
+    return product.stock <= product.lowStockThreshold ? `Low stock · ${product.stock} left` : `${product.stock} in stock`;
+}
+function renderInventory() {
+    if (!isAdmin()) return;
+    const units = PRODUCTS.reduce((sum, product) => sum + product.stock, 0);
+    const lowCount = PRODUCTS.filter(product => product.stock <= product.lowStockThreshold).length;
+    $('inventoryStats').innerHTML = `
+        <div><b>${PRODUCTS.length}</b><span>Products</span></div>
+        <div><b>${units}</b><span>Units in stock</span></div>
+        <div><b>${lowCount}</b><span>Low or out of stock</span></div>`;
+    $('inventoryRows').innerHTML = PRODUCTS.length ? PRODUCTS.map(product => `
+        <article class="inventory-row">
+            <div class="inventory-product"><img src="${escapeHTML(product.img)}" alt=""><div><b>${escapeHTML(product.name)}</b><small>${escapeHTML(product.cat)} · ${peso(product.price)}</small></div></div>
+            <div class="inventory-stock"><span class="stock-state ${product.stock === 0 ? 'out' : product.stock <= product.lowStockThreshold ? 'low' : ''}">${escapeHTML(stockLabel(product))}</span><small>Alert at ${product.lowStockThreshold} or fewer</small></div>
+            <div class="inventory-actions">
+                <button type="button" aria-label="Decrease ${escapeHTML(product.name)} stock" onclick="adjustStock('${escapeHTML(product.id)}',-1)">−</button>
+                <button type="button" aria-label="Increase ${escapeHTML(product.name)} stock" onclick="adjustStock('${escapeHTML(product.id)}',1)">+</button>
+                <button type="button" onclick="openInventoryEditor('${escapeHTML(product.id)}')">Edit</button>
+                <button type="button" class="danger" onclick="deleteInventoryProduct('${escapeHTML(product.id)}')">Delete</button>
+            </div>
+        </article>`).join('') : '<p class="inventory-empty">No products yet. Add a product to get started.</p>';
+}
+function adjustStock(id, change) {
+    if (!isAdmin()) return;
+    const product = PRODUCTS.find(item => item.id === id);
+    if (!product) return;
+    product.stock = Math.max(0, product.stock + change);
+    saveInventory();
+    renderProducts();
+    renderInventory();
+}
+let editingProductId = null;
+function openInventoryEditor(id) {
+    if (!isAdmin()) return;
+    const product = id ? PRODUCTS.find(item => item.id === id) : null;
+    if (id && !product) return;
+    editingProductId = product ? product.id : null;
+    $('inventoryEditorTitle').textContent = product ? 'Edit product' : 'Add product';
+    $('inventoryName').value = product ? product.name : '';
+    $('inventoryDescription').value = product ? product.desc : '';
+    $('inventoryPrice').value = product ? product.price : '';
+    $('inventoryImage').value = product ? product.img : '';
+    $('inventoryCategory').value = product ? product.cat : CATS[0];
+    $('inventoryStock').value = product ? product.stock : 12;
+    $('inventoryThreshold').value = product ? product.lowStockThreshold : 5;
+    $('inventoryEditorModal').hidden = false;
+}
+function closeInventoryEditor() {
+    const modal = $('inventoryEditorModal');
+    if (modal) modal.hidden = true;
+    editingProductId = null;
+}
+function saveInventoryProduct(e) {
+    e.preventDefault();
+    if (!isAdmin()) return;
+    const name = $('inventoryName').value.trim();
+    const desc = $('inventoryDescription').value.trim();
+    const price = Number($('inventoryPrice').value);
+    const imgValue = $('inventoryImage').value.trim();
+    const img = imgValue ? safeImageURL(imgValue) : '';
+    const cat = $('inventoryCategory').value;
+    const stock = Number($('inventoryStock').value);
+    const lowStockThreshold = Number($('inventoryThreshold').value);
+    if (!name || !desc || !Number.isFinite(price) || price <= 0 || !Number.isInteger(stock) || stock < 0 ||
+        !Number.isInteger(lowStockThreshold) || lowStockThreshold < 0 || (imgValue && !img) || !CATS.includes(cat)) {
+        showToast('Please check the product details and try again.');
+        return;
+    }
+    if (PRODUCTS.some(product => product.id !== editingProductId && product.name.toLowerCase() === name.toLowerCase())) {
+        showToast('A product with that name already exists.');
+        return;
+    }
+    const existing = PRODUCTS.find(product => product.id === editingProductId);
+    const product = {
+        id: existing ? existing.id : `product-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+        name, desc, price, cat, stock, lowStockThreshold,
+        img: img || (existing ? existing.img : DEFAULT_PRODUCTS[0].img),
+        kind: existing ? existing.kind : 'vase',
+        colors: existing ? existing.colors : [['Standard', '#b7a18a']],
+        extras: existing ? existing.extras : []
+    };
+    if (existing) PRODUCTS = PRODUCTS.map(item => item.id === existing.id ? product : item);
+    else PRODUCTS.push(product);
+    saveInventory();
+    drawFilters();
+    renderProducts();
+    renderInventory();
+    closeInventoryEditor();
+    showToast(existing ? 'Product updated.' : 'Product added.');
+}
+function deleteInventoryProduct(id) {
+    if (!isAdmin()) return;
+    const product = PRODUCTS.find(item => item.id === id);
+    if (!product) return;
+    if (cart.some(item => item.productId === id)) {
+        showToast('Remove this product from the cart before deleting it.');
+        return;
+    }
+    if (!confirm(`Delete "${product.name}" from the inventory?`)) return;
+    PRODUCTS = PRODUCTS.filter(item => item.id !== id);
+    saveInventory();
+    drawFilters();
+    renderProducts();
+    renderInventory();
+    showToast('Product deleted.');
+}
 
 /* ---------- YOUR REAL PHOTOS ----------
    Paste a photo link (or a file path like 'images/vase-white.jpg') between the quotes
@@ -416,12 +601,13 @@ const peso = n => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2 }
 function renderProducts() {
     $('productsGrid').innerHTML = PRODUCTS.map((p, i) => activeCat !== 'All' && p.cat !== activeCat ? '' : `
     <article class="product reveal ${REV.has(i) ? 'in' : ''}" data-i="${i}" style="transition-delay:${(i % 4) * 80}ms" onclick="openProduct(${i})">
-        <div class="pimg"><img src="${colorImg(p, 0)}" alt="${p.name}"><span class="badge">${p.cat}</span></div>
+        <div class="pimg"><img src="${escapeHTML(colorImg(p, 0))}" alt="${escapeHTML(p.name)}"><span class="badge">${escapeHTML(p.cat)}</span></div>
         <div class="product-info">
-            <h3>${p.name}</h3>
-            <p>${p.desc}</p>
+            <h3>${escapeHTML(p.name)}</h3>
+            <p>${escapeHTML(p.desc)}</p>
             ${p.colors.length > 1 ? `<div class="dots" onmouseleave="swapCard(this,${i},0)">${p.colors.map((c, k) => `<i style="background:${c[1]}" title="${c[0]}" onmouseenter="swapCard(this,${i},${k})"></i>`).join('')}</div>` : ''}
             <div class="price-row"><span class="price">${peso(p.price)}</span><button class="add">Choose Options</button></div>
+            <small class="product-stock ${p.stock === 0 ? 'out' : p.stock <= p.lowStockThreshold ? 'low' : ''}">${escapeHTML(stockLabel(p))}</small>
         </div>
     </article>`).join('');
     observeCards();
@@ -438,7 +624,11 @@ function openProduct(i) {
 }
 function closeProduct() { $('productModal').hidden = true; }
 function setColor(k) { cur.color = k; drawProduct(); }
-function setQty(d) { cur.qty = Math.max(1, Math.min(20, cur.qty + d)); drawProduct(); }
+function setQty(d) {
+    if (cur.p.stock < 1) return;
+    cur.qty = Math.max(1, Math.min(20, cur.p.stock, cur.qty + d));
+    drawProduct();
+}
 function toggleExtra(j) { cur.ex[j].on = !cur.ex[j].on; drawProduct(); }
 function setExtraColor(j, v) { cur.ex[j].color = +v; drawProduct(); }
 
@@ -446,20 +636,23 @@ function drawProduct() {
     const { p, color, qty, ex } = cur;
     let total = p.price * qty;
     p.extras.forEach((e, j) => { if (ex[j].on) total += e.p; });
+    const image = color === 0 && !p.colors[0][2] && !FOUND[p.name + '|' + p.colors[0][0]] && !PHOTOS[p.name + '|' + p.colors[0][0]]
+        ? p.img.replace('w=700', 'w=1000') : colorImg(p, color);
     $('pmBody').innerHTML = `
     <div class="pm-img">
-        <div class="tint"><img src="${color === 0 && !p.colors[0][2] && !FOUND[p.name + '|' + p.colors[0][0]] && !PHOTOS[p.name + '|' + p.colors[0][0]] ? p.img.replace('w=700', 'w=1000') : colorImg(p, color)}" alt="${p.name} in ${p.colors[color][0]}"></div>
-        ${p.colors.length > 1 ? `<div class="thumbs">${p.colors.map((c, k) => `<button class="${k === color ? 'on' : ''}" title="${c[0]}" onclick="setColor(${k})"><img src="${colorImg(p, k)}" alt="${c[0]}"></button>`).join('')}</div>` : ''}
+        <div class="tint"><img src="${escapeHTML(image)}" alt="${escapeHTML(p.name)} in ${escapeHTML(p.colors[color][0])}"></div>
+        ${p.colors.length > 1 ? `<div class="thumbs">${p.colors.map((c, k) => `<button class="${k === color ? 'on' : ''}" title="${escapeHTML(c[0])}" onclick="setColor(${k})"><img src="${escapeHTML(colorImg(p, k))}" alt="${escapeHTML(c[0])}"></button>`).join('')}</div>` : ''}
     </div>
     <div class="pm-info">
-        <div class="eyebrow">${p.cat}</div>
-        <h2>${p.name}</h2>
-        <p class="pm-desc">${p.desc}</p>
+        <div class="eyebrow">${escapeHTML(p.cat)}</div>
+        <h2>${escapeHTML(p.name)}</h2>
+        <p class="pm-desc">${escapeHTML(p.desc)}</p>
         <div class="pm-price">${peso(p.price)}</div>
-        <div class="pm-label">Color: <b>${p.colors[color][0]}</b></div>
+        <div class="pm-stock ${p.stock === 0 ? 'out' : p.stock <= p.lowStockThreshold ? 'low' : ''}">${escapeHTML(stockLabel(p))}</div>
+        <div class="pm-label">Color: <b>${escapeHTML(p.colors[color][0])}</b></div>
         ${p.colors.length > 1 ? `<div class="swatches">${p.colors.map((c, k) => `<button class="sw ${k === color ? 'on' : ''}" style="background:${c[1]}" title="${c[0]}" onclick="setColor(${k})"></button>`).join('')}</div>` : ''}
         <div class="pm-label">Quantity</div>
-        <div class="qty"><button onclick="setQty(-1)">−</button><span>${qty}</span><button onclick="setQty(1)">+</button></div>
+        <div class="qty"><button ${p.stock === 0 ? 'disabled' : ''} onclick="setQty(-1)">−</button><span>${qty}</span><button ${p.stock === 0 || qty >= p.stock ? 'disabled' : ''} onclick="setQty(1)">+</button></div>
         <div class="pm-label">Complete your set <small>(optional add-ons)</small></div>
         ${p.extras.map((e, j) => `
         <div class="extra ${ex[j].on ? 'on' : ''}">
@@ -468,14 +661,19 @@ function drawProduct() {
                 ? `<select onchange="setExtraColor(${j}, this.value)">${e.c.map((c, k) => `<option value="${k}" ${k === ex[j].color ? 'selected' : ''}>${c[0]}</option>`).join('')}</select>`
                 : `<b>${e.c[0][0]}</b>`}</div>` : ''}
         </div>`).join('')}
-        <button class="btn pm-add" onclick="addConfigured()">Add to Cart · ${peso(total)}</button>
+        <button class="btn pm-add" ${p.stock === 0 ? 'disabled' : ''} onclick="addConfigured()">${p.stock === 0 ? 'Out of Stock' : 'Add to Cart · ' + peso(total)}</button>
     </div>`;
 }
 
 function addConfigured() {
     const { p, color, qty, ex } = cur;
+    const alreadyReserved = cart.filter(item => item.productId === p.id).reduce((sum, item) => sum + item.quantity, 0);
+    if (p.stock - alreadyReserved < qty) {
+        showToast(`Only ${Math.max(0, p.stock - alreadyReserved)} more ${p.name} available.`);
+        return;
+    }
     const c = p.colors[color];
-    addLine({ key: p.name + '|' + c[0], name: p.name, opt: c[0], hex: c[1], img: colorImg(p, color), price: p.price, qty: qty });
+    addLine({ key: p.id + '|' + c[0], productId: p.id, name: p.name, opt: c[0], hex: c[1], img: colorImg(p, color), price: p.price, qty: qty });
     p.extras.forEach((e, j) => {
         if (!ex[j].on) return;
         const ec = e.c[ex[j].color];
