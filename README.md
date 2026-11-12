@@ -1,15 +1,20 @@
-# Haven & Hue on Vercel
+# Haven & Hue
 
-This is a static HTML site. `index.html` is the homepage; no build step or framework is required.
+A static storefront deployed on Vercel. No build step or framework is required.
 
-## Deploy
+## Files
 
-From this folder, install and sign in to the Vercel CLI, then run:
+- `index.html` — homepage markup and entry point.
+- `styles.css` — page styles linked from the HTML.
+- `script.js` — cart, checkout, login, product, and interaction behavior.
+- `Haven & Hue.html` — standalone copy of the homepage with the same asset links.
+
+## Deployment
+
+The GitHub repository is connected to Vercel. Commits pushed to `main` trigger a new deployment automatically.
+
+To deploy manually with the Vercel CLI:
 
 ```powershell
-npm install --global vercel
-vercel login
 vercel --prod
 ```
-
-The first deployment prompts you to link or create a Vercel project. Vercel will provide the deployed URL when it finishes.

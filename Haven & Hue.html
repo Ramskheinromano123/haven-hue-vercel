@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Haven & Hue storefront -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haven & Hue | Home Ornaments</title>
+<link rel="stylesheet" href="styles.css">
+
+</head>
+
+<body>
+
+<!-- ============ WELCOME INTRO (plays once per visit, click to skip) ============ -->
+<div class="intro" id="intro" onclick="endIntro()" aria-hidden="true">
+    <div class="intro-arch"><div class="intro-logo">Haven &amp; Hue</div></div>
+    <p class="intro-tag">Thoughtful details. Beautiful spaces.</p>
+    <div class="intro-line"><i></i></div>
+</div>
+
+<!-- ============ HOME ============ -->
+<div class="topbar">✦ Better pieces. Brighter homes. ✦ <span>Care Line: (082) 555-0143 · hello@havenhue.ph</span></div>
+<header class="hero" id="home">
+
+<nav>
+    <div class="logo">Haven & Hue</div>
+    <div>
+        <a href="#home">Home</a>
+        <a href="#shop">Shop</a>
+        <a href="#about">About</a>
+        <a href="#shop" id="navCart" onclick="openCart(event)" hidden>Cart <span class="cart-count" id="navCount">0</span></a>
+        <span class="nav-user" id="navUser" hidden></span>
+        <a href="#" class="nav-login" id="navAuth" onclick="navAuthClick(event)">Login</a>
+    </div>
+</nav>
+
+<div class="hero-content">
+    <div class="eyebrow">Thoughtful details. Beautiful spaces.</div>
+    <h1>Make Your House Feel Like Home.</h1>
+    <p>
+        Discover charming home ornaments and decorative
+        pieces that bring warmth, character, and personality
+        to every corner.
+    </p>
+    <a class="btn" href="#shop">Explore Collection</a>
+    <a class="btn btn-ghost" id="heroLogin" href="#" onclick="openAuth(event)">Login</a>
+    <div class="hstats"><div><b>120+</b><span>pieces</span></div><div><b>4.9/5</b><span>rating</span></div><div><b>7 days</b><span>open weekly</span></div></div>
+</div>
+
+<div class="hero-art" aria-hidden="true"><div class="dash">
+<div class="dh"><img src="https://images.unsplash.com/photo-1578500494198-246f612d3b3d?auto=format&fit=crop&w=200&q=80" alt=""><div><small>Today's pick</small><b>Minimalist Ceramic Vase</b></div><em>Bestseller</em></div>
+<div class="bar"><span>Customer love</span><b>98%</b><i style="--w:98%"></i></div><div class="bar"><span>Color options</span><b>4 shades</b><i style="--w:80%"></i></div><div class="bar"><span>In stock</span><b>82%</b><i style="--w:82%"></i></div>
+<div class="dn"><span>✦</span><div><small>Free shipping</small><b>On orders over ₱1,500</b></div></div></div></div>
+<i class="dust" style="left:8%;width:6px;height:6px;animation-duration:14s;animation-delay:-2s"></i><i class="dust" style="left:22%;width:4px;height:4px;animation-duration:18s;animation-delay:-9s"></i><i class="dust" style="left:37%;width:8px;height:8px;animation-duration:16s;animation-delay:-5s"></i><i class="dust" style="left:52%;width:5px;height:5px;animation-duration:20s;animation-delay:-12s"></i><i class="dust" style="left:66%;width:7px;height:7px;animation-duration:15s;animation-delay:-7s"></i><i class="dust" style="left:80%;width:4px;height:4px;animation-duration:19s;animation-delay:-3s"></i><i class="dust" style="left:92%;width:6px;height:6px;animation-duration:17s;animation-delay:-10s"></i>
+<div class="scroll-cue" aria-hidden="true"></div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div class="track"><span>Free shipping over ₱1,500</span><span>Handcrafted home ornaments</span><span>GCash · Maya · Bank · Cash on Delivery</span><span>Pick your perfect color</span><span>Free shipping over ₱1,500</span><span>Handcrafted home ornaments</span><span>GCash · Maya · Bank · Cash on Delivery</span><span>Pick your perfect color</span></div></div>
+
+<!-- ============ OUR CONCEPT ============ -->
+<section class="concept-sec" id="concept">
+    <div class="section-heading"><div class="eyebrow">Our concept</div><h2>Where warmth meets style.</h2>
+    <p>Haven &amp; Hue is built on one idea: your home should feel like you. Pick a piece, choose your color, and make every corner your own.</p></div>
+    <div class="concepts"><div class="concept reveal"><svg viewBox="0 0 24 24"><path d="M4 18c3-6 5-6 8 0s5 6 8 0"/></svg><h3>Warm Textures</h3><p>Soft linens, natural wood and glazed ceramics that make a room feel lived in.</p></div><div class="concept reveal"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6.5L21 10l-5 4.5L17.5 21 12 17.5 6.5 21 8 14.5 3 10l6.5-.5z"/></svg><h3>Timeless Accents</h3><p>Classic shapes in calm, earthy shades that stay beautiful season after season.</p></div><div class="concept reveal"><svg viewBox="0 0 24 24"><path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z"/></svg><h3>Thoughtful Details</h3><p>Small finishing touches, chosen in your color, that turn a house into your home.</p></div></div>
+</section>
+
+<!-- ============ CATEGORIES ============ -->
+<section id="shop">
+<div class="section-heading">
+    <div class="eyebrow">Our collection</div>
+    <h2>Shop Home Ornaments</h2>
+    <p id="shopSub">Beautiful finds to make your space uniquely yours.</p>
+</div>
+
+<!-- ============ PRODUCTS ============ -->
+<div class="filters" id="catBar" hidden></div>
+<div class="products" id="productsGrid" hidden></div>
+</section>
+
+<!-- ============ PERKS ============ -->
+<section class="perks">
+    <div class="perk"><svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7M7 19a2 2 0 100-4 2 2 0 000 4zM17 19a2 2 0 100-4 2 2 0 000 4z"/></svg><b>Free Shipping</b><small>On orders over ₱1,500</small></div>
+    <div class="perk"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16" cy="10" r="1.2"/></svg><b>Choose Your Color</b><small>Every piece in several shades</small></div>
+    <div class="perk"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5L16 9.5"/></svg><b>Flexible Payment</b><small>E-wallet, bank or cash on delivery</small></div>
+    <div class="perk"><svg viewBox="0 0 24 24"><path d="M12 20s-8-5-8-11a4.5 4.5 0 018-2.5A4.5 4.5 0 0120 9c0 6-8 11-8 11z"/></svg><b>Made with Care</b><small>Thoughtful, handcrafted details</small></div>
+</section>
+
+<section class="how"><div class="section-heading"><div class="eyebrow">Ready when you are</div><h2>Home styling in four easy steps.</h2></div><div class="steps"><div class="step reveal"><b>01</b><h3>Choose a piece</h3><p>Browse by category and open any product.</p></div><div class="step reveal"><b>02</b><h3>Pick your color</h3><p>Preview your shade right on the photo.</p></div><div class="step reveal"><b>03</b><h3>Complete your set</h3><p>Add matching extras in one tap.</p></div><div class="step reveal"><b>04</b><h3>Check out</h3><p>GCash, Maya, bank or cash on delivery.</p></div></div></section>
+
+<svg class="wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40C240 90 480 0 720 40S1200 80 1440 30V80H0z" fill="#e8ded3"/></svg>
+
+<!-- ============ ABOUT ============ -->
+<section class="about" id="about">
+
+<div class="arch-frame"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=85" alt="Cozy living room"><svg class="spin" viewBox="0 0 120 120" aria-hidden="true"><defs><path id="c2" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs><text><textPath href="#c2">HANDCRAFTED • HOME ORNAMENTS • </textPath></text></svg></div>
+
+<div>
+    <div class="eyebrow">Our story</div>
+    <h2>Decorate with Heart.</h2>
+    <p>
+        At Haven & Hue, we believe your home should tell
+        your story. Our collection brings together warm
+        textures, timeless accents, and thoughtful details
+        to help you create a space you love.
+    </p>
+    <a class="btn" href="#shop">Shop the Collection</a>
+</div>
+
+</section>
+
+<!-- ============ STATS ============ -->
+<!-- EDIT HERE: change the numbers in data-count="..." -->
+<section class="stats">
+    <div><b data-count="2500" data-suffix="+">0</b><span>Happy homes</span></div>
+    <div><b data-count="120" data-suffix="+">0</b><span>Handpicked pieces</span></div>
+    <div><b data-count="4.9" data-dec="1" data-suffix="★">0</b><span>Average rating</span></div>
+</section>
+
+<!-- ============ SHOP THE LOOK ============ -->
+<section>
+    <div class="section-heading"><div class="eyebrow">Get inspired</div><h2>Shop the Look</h2><p>Real rooms, styled with Haven &amp; Hue pieces.</p></div>
+    <div class="mosaic">
+    <div class="tile t1 reveal"><img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80" alt="Living Room" loading="lazy"><span>Living Room</span></div>
+    <div class="tile t2 reveal"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80" alt="Cozy Corners" loading="lazy"><span>Cozy Corners</span></div>
+    <div class="tile t3 reveal"><img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80" alt="Warm Lighting" loading="lazy"><span>Warm Lighting</span></div>
+    <div class="tile t4 reveal"><img src="https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=800&q=80" alt="Fresh Greens" loading="lazy"><span>Fresh Greens</span></div>
+    <div class="tile t5 reveal"><img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80" alt="Coffee Tables" loading="lazy"><span>Coffee Tables</span></div>
+    <div class="tile t6 reveal"><img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=80" alt="Wall Stories" loading="lazy"><span>Wall Stories</span></div>
+    </div>
+</section>
+
+<!-- ============ REVIEWS ============ -->
+<!-- EDIT HERE: these are sample reviews, replace with real ones -->
+<section class="reviews">
+    <div class="section-heading"><div class="eyebrow">Kind words</div><h2>Loved by Our Customers</h2></div>
+    <div class="rv-grid">
+    <div class="rv reveal"><div class="stars">★★★★★</div><p>Ang ganda ng vase! The color looked exactly like the photo and it arrived well packed. Our living room feels so much warmer.</p><div class="who"><i>M</i><div><b>Maria S.</b><small>Davao City</small></div></div></div>
+    <div class="rv reveal"><div class="stars">★★★★★</div><p>Love that I could pick the color before ordering. The candle smells amazing and the brass holder is a perfect match.</p><div class="who"><i>J</i><div><b>Jessa R.</b><small>Cebu City</small></div></div></div>
+    <div class="rv reveal"><div class="stars">★★★★★</div><p>Cash on delivery made it easy for my parents to buy too. The throw cushions are soft and look premium.</p><div class="who"><i>P</i><div><b>Paolo D.</b><small>Quezon City</small></div></div></div>
+    </div>
+    <p class="rv-note">Sample reviews for this demo store.</p>
+</section>
+
+<!-- ============ NEWSLETTER ============ -->
+<section class="news" style="padding-bottom:60px">
+    <svg class="leaf l" viewBox="0 0 120 160" aria-hidden="true"><path d="M60 160V30M60 120C30 110 20 80 25 55c25 10 38 35 35 65zM60 95C90 85 100 55 95 30c-25 10-38 35-35 65zM60 60C42 52 38 32 45 15c17 8 22 25 15 45z"/></svg><svg class="leaf r" viewBox="0 0 120 160" aria-hidden="true"><path d="M60 160V30M60 120C30 110 20 80 25 55c25 10 38 35 35 65zM60 95C90 85 100 55 95 30c-25 10-38 35-35 65zM60 60C42 52 38 32 45 15c17 8 22 25 15 45z"/></svg>
+    <div class="eyebrow" style="color:var(--gold)">Stay in the loop</div>
+    <h2>Join the Haven &amp; Hue Circle</h2>
+    <p>Get styling ideas, new arrivals and 10% off your first order.</p>
+    <form onsubmit="event.preventDefault();showToast('Thanks for subscribing! 💌');this.reset()">
+        <input type="email" placeholder="Your email address" required aria-label="Email address">
+        <button class="btn" type="submit">Subscribe</button>
+    </form>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+    <div class="f-grid">
+        <div><div class="logo">Haven &amp; Hue</div><p style="margin-top:12px;line-height:1.7">Beautiful details for the place you call home.</p></div>
+        <div><h5>Explore</h5><a href="#home">Home</a><a href="#shop">Shop</a><a href="#about">Our story</a></div>
+        <div><h5>We accept</h5><div class="chips"><span>GCash</span><span>Maya</span><span>Bank Transfer</span><span>Cash on Delivery</span></div></div>
+    </div>
+    <div class="f-bottom"><p style="margin:0">© 2026 Haven &amp; Hue. Demo online store.</p></div>
+</footer>
+
+<button class="to-top" id="toTop" onclick="scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">
+    <svg viewBox="0 0 50 50"><circle class="bg" cx="25" cy="25" r="20"/><circle class="fg" id="toTopRing" cx="25" cy="25" r="20"/></svg><b>↑</b>
+</button>
+
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="modal" id="authModal" hidden onclick="if(event.target===this)closeAuth()">
+    <div class="modal-box">
+        <button class="close" onclick="closeAuth()" aria-label="Close">&times;</button>
+        <div class="logo">Haven & Hue</div>
+        <p class="modal-sub" id="authSub">Welcome back! Log in to browse our collection.</p>
+        <div class="tabs">
+            <button type="button" id="tabLogin" class="active" onclick="setMode('login')">Login</button>
+            <button type="button" id="tabSignup" onclick="setMode('signup')">Create account</button>
+        </div>
+        <form id="authForm" onsubmit="submitAuth(event)">
+            <input id="fName" type="text" placeholder="Full name" hidden>
+            <input id="fEmail" type="email" placeholder="Email address" required>
+            <input id="fPass" type="password" placeholder="Password" required>
+            <div class="auth-error" id="authError"></div>
+            <button class="btn" type="submit" id="authSubmit">Login</button>
+        </form>
+        <p class="demo-hint">Demo account: <b>demo@havenhue.com</b> / <b>demo1234</b></p>
+    </div>
+</div>
+
+<!-- ============ PRODUCT DETAIL MODAL ============ -->
+<div class="modal" id="productModal" hidden onclick="if(event.target===this)closeProduct()">
+    <div class="modal-box pm-box">
+        <button class="close" onclick="closeProduct()" aria-label="Close">&times;</button>
+        <div id="pmBody"></div>
+    </div>
+</div>
+
+<!-- ============ SOUND ON / OFF ============ -->
+<button class="sound-btn" id="soundBtn" type="button" aria-pressed="true" aria-label="Ambient sound and effects on. Click to mute" title="Ambient sound and effects on / off">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path class="w" d="M15.5 9.5a3.5 3.5 0 010 5M18 7a7 7 0 010 10"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+</button>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============ CART BUTTON ============ -->
+<div class="cart-panel" id="cartPanel" hidden onclick="openCart()">
+    <strong>Shopping Cart · <span id="cartCount">0</span> item(s)</strong>
+    <div id="cartItems">Your cart is empty.</div>
+    <div style="margin-top:8px;font-weight:bold">Subtotal: ₱<span id="cartTotal">0</span>.00</div>
+    <span class="cart-link">View cart &amp; checkout →</span>
+</div>
+
+<!-- ============ CART DRAWER ============ -->
+<div class="drawer-bg" id="cartBg" hidden onclick="closeCart()"></div>
+<aside class="drawer" id="cartDrawer" hidden>
+    <div class="drawer-head"><h3>Your Cart</h3><button class="close" onclick="closeCart()" aria-label="Close">&times;</button></div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-foot" id="drawerFoot"></div>
+</aside>
+
+<!-- ============ CHECKOUT MODAL ============ -->
+<div class="modal" id="checkoutModal" hidden onclick="if(event.target===this)closeCheckout()">
+    <div class="modal-box ck-box">
+        <button class="close" onclick="closeCheckout()" aria-label="Close">&times;</button>
+        <div id="ckBody"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
